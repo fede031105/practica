@@ -1,0 +1,25 @@
+$kind: http-request
+name: http://localhost:8081/api/v1/heroes/1
+description: ""
+url: http://localhost:8081/api/v1/heroes/1
+method: PUT
+body:
+  type: json
+  content: "{\r
+
+    \  \"nombre\": \"Miguel\",\r
+
+    \  \"apellido\": \"Hidalgo y Costilla\",\r
+
+    \  \"fechaNacimiento\": \"1753-05-08\",\r
+
+    \  \"estadoNacimiento\": \"Guanajuato\",\r
+
+    \  \"epoca\": \"Independencia\",\r
+
+    \  \"movimiento\": \"Grito de Dolores\",\r
+
+    \  \"descripcion\": \"Padre de la Patria. Modificamos esta descripción desde Postman.\"\r
+
+    }"
+order: 4219053106752147

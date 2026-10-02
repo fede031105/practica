@@ -1,0 +1,6 @@
+$kind: http-request
+name: http://localhost:8081/api/v1/heroes/epoca/Independencia
+description: ""
+url: http://localhost:8081/api/v1/heroes/epoca/Independencia
+method: GET
+order: 4472509369354450

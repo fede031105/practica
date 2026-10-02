@@ -1,0 +1,6 @@
+$kind: http-request
+name: http://localhost:8081/api/v1/heroes/2
+description: ""
+url: http://localhost:8081/api/v1/heroes/2
+method: DELETE
+order: 4418621843210197

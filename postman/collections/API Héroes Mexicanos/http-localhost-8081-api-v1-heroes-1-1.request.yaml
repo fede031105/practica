@@ -1,0 +1,6 @@
+$kind: http-request
+name: http://localhost:8081/api/v1/heroes/1
+description: ""
+url: http://localhost:8081/api/v1/heroes/1
+method: GET
+order: 4088701400033751

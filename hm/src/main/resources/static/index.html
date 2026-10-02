@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Héroes Mexicanos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .header-mexico { background: linear-gradient(90deg, #006847, #ffffff, #ce1126); padding: 10px 0; }
+    </style>
+</head>
+<body>
+<div class="header-mexico mb-4"></div>
+<div class="container my-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Museo Nacional de Historia - Héroes Mexicanos</h2>
+        <button class="btn btn-success" onclick="abrirModalRegistrar()">+ Registrar Héroe</button>
+    </div>
+
+    <!-- Búsquedas y Filtros -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Búsquedas avanzadas</h5>
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <select id="tipoBusqueda" class="form-select">
+                        <option value="epoca">Por Época</option>
+                        <option value="movimiento">Por Movimiento</option>
+                        <option value="estado">Por Estado</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" id="criterioBusqueda" class="form-control" placeholder="Término a buscar...">
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button class="btn btn-primary w-100" onclick="ejecutarBusqueda()">Buscar</button>
+                    <button class="btn btn-secondary" onclick="cargarHeroes()">Restablecer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensajes de feedback -->
+    <div id="alertContainer"></div>
+
+    <!-- Tabla -->
+    <div class="table-responsive bg-white rounded shadow-sm p-3">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nombre Completo</th>
+                <th>Fecha Nac.</th>
+                <th>Estado</th>
+                <th>Época</th>
+                <th>Movimiento</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody id="tablaHeroes"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Formulario (Registro / Modificación) -->
+<div class="modal fade" id="modalHeroe" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalHeroeTitulo">Registrar Héroe</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="heroeId">
+                <div class="mb-2">
+                    <label class="form-label">Nombre *</label>
+                    <input type="text" id="heroeNombre" class="form-control" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Apellido *</label>
+                    <input type="text" id="heroeApellido" class="form-control" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Fecha de Nacimiento *</label>
+                    <input type="date" id="heroeFecha" class="form-control" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Estado de Nacimiento *</label>
+                    <input type="text" id="heroeEstado" class="form-control" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Época Histórica *</label>
+                    <input type="text" id="heroeEpoca" class="form-control" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Movimiento *</label>
+                    <input type="text" id="heroeMovimiento" class="form-control" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Descripción</label>
+                    <textarea id="heroeDescripcion" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarHeroe()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar Eliminación -->
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                ¿Seguro que deseas eliminar este personaje histórico?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarEliminar()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const API_URL = '/api/v1/heroes';
+    let modalHeroeBS = null;
+    let modalEliminarBS = null;
+    let idParaEliminar = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        modalHeroeBS = new bootstrap.Modal(document.getElementById('modalHeroe'));
+        modalEliminarBS = new bootstrap.Modal(document.getElementById('modalEliminar'));
+        cargarHeroes();
+    });
+
+    function mostrarAlerta(mensaje, tipo = 'success') {
+        const cont = document.getElementById('alertContainer');
+        cont.innerHTML = `<div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>`;
+    }
+
+    function renderizarTabla(lista) {
+        const tbody = document.getElementById('tablaHeroes');
+        tbody.innerHTML = '';
+        if (!lista || lista.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No se encontraron héroes registrados.</td></tr>';
+            return;
+        }
+        lista.forEach(h => {
+            tbody.innerHTML += `
+          <tr>
+            <td>${h.id}</td>
+            <td><strong>${h.nombre} ${h.apellido}</strong></td>
+            <td>${h.fechaNacimiento}</td>
+            <td>${h.estadoNacimiento}</td>
+            <td><span class="badge bg-info text-dark">${h.epoca}</span></td>
+            <td>${h.movimiento}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditar(${h.id})">Editar</button>
+              <button class="btn btn-sm btn-outline-danger" onclick="abrirModalEliminar(${h.id})">Eliminar</button>
+            </td>
+          </tr>
+        `;
+        });
+    }
+
+    function cargarHeroes() {
+        document.getElementById('criterioBusqueda').value = '';
+        fetch(API_URL)
+            .then(r => r.json())
+            .then(data => renderizarTabla(data))
+            .catch(() => mostrarAlerta('Error al cargar héroes desde la API', 'danger'));
+    }
+
+    function ejecutarBusqueda() {
+        const tipo = document.getElementById('tipoBusqueda').value;
+        const criterio = document.getElementById('criterioBusqueda').value.trim();
+        if (!criterio) {
+            cargarHeroes();
+            return;
+        }
+        fetch(`${API_URL}/${tipo}/${encodeURIComponent(criterio)}`)
+            .then(r => r.json())
+            .then(data => renderizarTabla(data))
+            .catch(() => mostrarAlerta('Error en la búsqueda', 'danger'));
+    }
+
+    function abrirModalRegistrar() {
+        document.getElementById('modalHeroeTitulo').innerText = 'Registrar Héroe';
+        document.getElementById('heroeId').value = '';
+        document.getElementById('heroeNombre').value = '';
+        document.getElementById('heroeApellido').value = '';
+        document.getElementById('heroeFecha').value = '';
+        document.getElementById('heroeEstado').value = '';
+        document.getElementById('heroeEpoca').value = '';
+        document.getElementById('heroeMovimiento').value = '';
+        document.getElementById('heroeDescripcion').value = '';
+        modalHeroeBS.show();
+    }
+
+    function abrirModalEditar(id) {
+        fetch(`${API_URL}/${id}`)
+            .then(r => r.json())
+            .then(h => {
+                document.getElementById('modalHeroeTitulo').innerText = 'Modificar Héroe';
+                document.getElementById('heroeId').value = h.id;
+                document.getElementById('heroeNombre').value = h.nombre;
+                document.getElementById('heroeApellido').value = h.apellido;
+                document.getElementById('heroeFecha').value = h.fechaNacimiento;
+                document.getElementById('heroeEstado').value = h.estadoNacimiento;
+                document.getElementById('heroeEpoca').value = h.epoca;
+                document.getElementById('heroeMovimiento').value = h.movimiento;
+                document.getElementById('heroeDescripcion').value = h.descripcion || '';
+                modalHeroeBS.show();
+            })
+            .catch(() => mostrarAlerta('Error al consultar el héroe', 'danger'));
+    }
+
+    function guardarHeroe() {
+        const id = document.getElementById('heroeId').value;
+        const payload = {
+            nombre: document.getElementById('heroeNombre').value,
+            apellido: document.getElementById('heroeApellido').value,
+            fechaNacimiento: document.getElementById('heroeFecha').value,
+            estadoNacimiento: document.getElementById('heroeEstado').value,
+            epoca: document.getElementById('heroeEpoca').value,
+            movimiento: document.getElementById('heroeMovimiento').value,
+            descripcion: document.getElementById('heroeDescripcion').value
+        };
+
+        const metodo = id ? 'PUT' : 'POST';
+        const url = id ? `${API_URL}/${id}` : API_URL;
+
+        fetch(url, {
+            method: metodo,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(async r => {
+                if (!r.ok) {
+                    const err = await r.json();
+                    throw new Error(err.error || 'Ocurrió un error en la operación');
+                }
+                return r.json();
+            })
+            .then(() => {
+                modalHeroeBS.hide();
+                mostrarAlerta(id ? 'Héroe modificado correctamente' : 'Héroe registrado con éxito');
+                cargarHeroes();
+            })
+            .catch(err => mostrarAlerta(err.message, 'danger'));
+    }
+
+    function abrirModalEliminar(id) {
+        idParaEliminar = id;
+        modalEliminarBS.show();
+    }
+
+    function confirmarEliminar() {
+        if (!idParaEliminar) return;
+        fetch(`${API_URL}/${idParaEliminar}`, { method: 'DELETE' })
+            .then(r => {
+                if (!r.ok) throw new Error('Error al eliminar');
+                modalEliminarBS.hide();
+                mostrarAlerta('Héroe eliminado correctamente');
+                cargarHeroes();
+            })
+            .catch(() => mostrarAlerta('No se pudo eliminar el héroe', 'danger'));
+    }
+</script>
+</body>
+</html>
+
+
+

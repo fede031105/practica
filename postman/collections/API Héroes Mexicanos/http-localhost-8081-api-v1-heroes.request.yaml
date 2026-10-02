@@ -1,0 +1,25 @@
+$kind: http-request
+name: http://localhost:8081/api/v1/heroes
+description: ""
+url: http://localhost:8081/api/v1/heroes
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"nombre\": \"Miguel\",\r
+
+    \  \"apellido\": \"Hidalgo y Costilla\",\r
+
+    \  \"fechaNacimiento\": \"1753-05-08\",\r
+
+    \  \"estadoNacimiento\": \"Guanajuato\",\r
+
+    \  \"epoca\": \"Independencia\",\r
+
+    \  \"movimiento\": \"Grito de Dolores\",\r
+
+    \  \"descripcion\": \"Iniciador del movimiento de independencia de México.\"\r
+
+    }"
+order: 1790982835319

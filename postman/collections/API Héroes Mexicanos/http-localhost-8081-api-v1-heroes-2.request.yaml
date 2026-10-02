@@ -1,0 +1,15 @@
+$kind: http-request
+name: http://localhost:8081/api/v1/heroes
+description: ""
+url: http://localhost:8081/api/v1/heroes
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"nombre\": \"Ignacio\",\r
+
+    \  \"descripcion\": \"Faltan los demás datos para probar el error.\"\r
+
+    }"
+order: 4213593243758291
